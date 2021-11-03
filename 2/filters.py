@@ -56,13 +56,11 @@ def zero_pad(image, pad_height, pad_width):
         out: numpy array of shape (H+2*pad_height, W+2*pad_width).
     """
 
-    H, W = image.shape
     out = None
 
     ### YOUR CODE HERE
     #creating mold
-    out = np.zeros((H + 2*pad_height,W + 2*pad_width))
-    out[pad_height:pad_height + H , pad_width:pad_width+W] = image
+    out = np.pad(image, [(pad_height, ), (pad_width, )], mode='constant')
     #baking cake
 
     ### END YOUR CODE
