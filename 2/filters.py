@@ -19,11 +19,24 @@ def conv_nested(image, kernel):
     Hk, Wk = kernel.shape
     out = np.zeros((Hi, Wi))
 
-    ### YOUR CODE HERE
-    pass
-    ### END YOUR CODE
-
+    for m in range(Hi):
+        for n in range(Wi):
+            ##kernel axis
+            addition = 0.0
+            for i in range(Hk):
+                for j in range(Wk):
+                    if (m + 1 - i) < 0 or (n + 1  -j) < 0 or (m + 1 -i) >= Hi or (n + 1 - j) >=Wi:
+                        addition +=0
+                    else:
+                        addition += kernel[i][j]*image[m + 1 -i][n + 1-j]
+            out[m][n] = addition
+    
     return out
+
+
+
+
+
 
 def zero_pad(image, pad_height, pad_width):
     """ Zero-pad an image.
@@ -47,7 +60,11 @@ def zero_pad(image, pad_height, pad_width):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    #creating mold
+    out = np.zeros((H + 2*pad_height,W + 2*pad_width))
+    out[pad_height:pad_height + H , pad_width:pad_width+W] = image
+    #baking cake
+
     ### END YOUR CODE
     return out
 
@@ -73,11 +90,14 @@ def conv_fast(image, kernel):
     """
     Hi, Wi = image.shape
     Hk, Wk = kernel.shape
+    kernelflip = np.flipud(np.fliplr(kernel)) #easy way to flip
+    imagePadded = zero_pad(image,Hk//2,Wk//2)
     out = np.zeros((Hi, Wi))
+    
+    for m in range(Hi):
+        for n in range(Wi):
+            out[m][n] = np.sum(imagePadded[m:m+Hk,n:n+Wk]*kernelflip) #applying convolution
 
-    ### YOUR CODE HERE
-    pass
-    ### END YOUR CODE
 
     return out
 
