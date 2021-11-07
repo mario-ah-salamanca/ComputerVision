@@ -1,4 +1,6 @@
+from matplotlib.colors import from_levels_and_colors
 import numpy as np
+from numpy.ma.core import get_object_signature
 
 
 def conv_nested(image, kernel):
@@ -25,17 +27,14 @@ def conv_nested(image, kernel):
             addition = 0.0
             for i in range(Hk):
                 for j in range(Wk):
-                    if (m + 1 - i) < 0 or (n + 1  -j) < 0 or (m + 1 -i) >= Hi or (n + 1 - j) >=Wi:
-                        addition +=0
+                    if (m + 1 - i) < 0 or (n + 1 - j) < 0 or (
+                            m + 1 - i) >= Hi or (n + 1 - j) >= Wi:
+                        addition += 0
                     else:
-                        addition += kernel[i][j]*image[m + 1 -i][n + 1-j]
+                        addition += kernel[i][j] * image[m + 1 - i][n + 1 - j]
             out[m][n] = addition
-    
+
     return out
-
-
-
-
 
 
 def zero_pad(image, pad_height, pad_width):
@@ -88,16 +87,17 @@ def conv_fast(image, kernel):
     """
     Hi, Wi = image.shape
     Hk, Wk = kernel.shape
-    kernelflip = np.flipud(np.fliplr(kernel)) #easy way to flip
-    imagePadded = zero_pad(image,Hk//2,Wk//2)
+    kernelflip = np.flipud(np.fliplr(kernel))  #easy way to flip
+    imagePadded = zero_pad(image, Hk // 2, Wk // 2)
     out = np.zeros((Hi, Wi))
-    
+
     for m in range(Hi):
         for n in range(Wi):
-            out[m][n] = np.sum(imagePadded[m:m+Hk,n:n+Wk]*kernelflip) #applying convolution
-
+            out[m][n] = np.sum(imagePadded[m:m + Hk, n:n + Wk] *
+                               kernelflip)  #applying convolution
 
     return out
+
 
 def conv_faster(image, kernel):
     """
@@ -118,6 +118,7 @@ def conv_faster(image, kernel):
 
     return out
 
+
 def cross_correlation(f, g):
     """ Cross-correlation of f and g.
 
@@ -133,10 +134,12 @@ def cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
-    pass
+    kernel = np.flipud(np.fliplr(g))
+    out = conv_fast(f, kernel)
     ### END YOUR CODE
 
     return out
+
 
 def zero_mean_cross_correlation(f, g):
     """ Zero-mean cross-correlation of f and g.
@@ -155,10 +158,15 @@ def zero_mean_cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
-    pass
+    gMean = np.mean(g, axis=(0, 1))
+    gZeroMean = g - gMean
+
+    out = cross_correlation(f, gZeroMean)
+
     ### END YOUR CODE
 
     return out
+
 
 def normalized_cross_correlation(f, g):
     """ Normalized cross-correlation of f and g.
@@ -179,7 +187,40 @@ def normalized_cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
-    pass
-    ### END YOUR CODE
+    """     
+    
+    # I tried to keep the code simpler using this code below, but i was not getting the right
+    # answer since I need to normailze each sub image but I dont know why it doesnt work
+    fmean = np.mean(f)
+    gmean = np.mean(g)
+    fstd = np.std(f)
+    gstd = np.std(g)
 
+    fout = (f - fmean) / fstd
+    gout = (g - gmean) / gstd
+    out = cross_correlation(fout,gout) 
+
+    """
+    # dimensions
+    Hi, Wi = f.shape
+    Hk, Wk = g.shape
+    #padding image
+    imagePadded = zero_pad(f, Hk // 2, Wk // 2)
+    #buffering output
+    out = np.zeros((Hi, Wi))
+    #calculating template normalize values
+    gmean = np.mean(g)
+    gstd = np.std(g)
+    gout = (g - gmean) / gstd
+    #cross correlation
+    for m in range(Hi):
+        for n in range(Wi):
+            #normalizing subimage of f
+            subimage = imagePadded[m:m + Hk, n:n + Wk]
+            fmean = np.mean(subimage)
+            fstd = np.std(subimage)
+            fout = (subimage - fmean) / fstd
+            #weighted sum
+            out[m][n] = np.sum(fout * gout)
+    ### END YOUR CODE
     return out
